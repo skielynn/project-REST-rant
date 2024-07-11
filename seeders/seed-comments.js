@@ -1,4 +1,3 @@
-// seeders-comments.js
 const db = require('../models');
 
 async function seed() {

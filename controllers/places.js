@@ -1,4 +1,5 @@
-const router = require('express').Router();
+const express = require('express');
+const router = express.Router();
 const db = require('../models');
 
 router.get('/', async (req, res) => {
@@ -6,18 +7,17 @@ router.get('/', async (req, res) => {
         const places = await db.Place.find();
         res.render('places/index', { places });
     } catch (err) {
-        console.log('err', err);
+        console.error('Error fetching places:', err);
         res.status(500).render('error404');
     }
 });
-
 router.post('/', async (req, res) => {
     try {
         const { pic, city, state } = req.body;
         req.body.pic = pic || undefined;
         req.body.city = city || undefined;
         req.body.state = state || undefined;
-        
+
         await db.Place.create(req.body);
         res.redirect('/places');
     } catch (err) {
@@ -28,7 +28,7 @@ router.post('/', async (req, res) => {
             }
             res.status(400).render('places/new', { message });
         } else {
-            console.log('err', err);
+            console.error('Error creating place:', err);
             res.status(500).render('error404');
         }
     }
@@ -44,7 +44,7 @@ router.get('/:id', async (req, res) => {
         if (!place) throw new Error('Place not found');
         res.render('places/show', { place });
     } catch (err) {
-        console.log('err', err);
+        console.error('Error fetching place:', err);
         res.status(404).render('error404');
     }
 });
@@ -58,10 +58,10 @@ router.put('/:id', async (req, res) => {
 
         const place = await db.Place.findByIdAndUpdate(req.params.id, req.body, { new: true });
         if (!place) throw new Error('Place not found');
-        
+
         res.redirect(`/places/${req.params.id}`);
     } catch (err) {
-        console.log('err', err);
+        console.error('Error updating place:', err);
         res.status(404).render('error404');
     }
 });
@@ -71,7 +71,7 @@ router.delete('/:id', async (req, res) => {
         await db.Place.findByIdAndDelete(req.params.id);
         res.redirect('/places');
     } catch (err) {
-        console.log('err', err);
+        console.error('Error deleting place:', err);
         res.status(404).render('error404');
     }
 });
@@ -82,36 +82,39 @@ router.get('/:id/edit', async (req, res) => {
         if (!place) throw new Error('Place not found');
         res.render('places/edit', { place });
     } catch (err) {
-        console.log('err', err);
+        console.error('Error fetching place for edit:', err);
         res.status(404).render('error404');
     }
 });
 
 router.post('/:id/comment', async (req, res) => {
     try {
+        console.log(req.body); 
+
         req.body.author = req.body.author || undefined;
-        req.body.rant = req.body.rant ? true : false;
-        
+        req.body.rant = req.body.rant ? true : false; 
+
         const place = await db.Place.findById(req.params.id);
         if (!place) throw new Error('Place not found');
-        
-        const comment = await db.Comment.create(req.body);
-        place.comments.push(comment.id);
-        await place.save();
-        
-        res.redirect(`/places/${req.params.id}`);
+
+        const comment = await db.Comment.create(req.body); 
+        place.comments.push(comment.id); 
+        await place.save(); 
+
+        res.redirect(`/places/${req.params.id}`); 
     } catch (err) {
-        console.log('err', err);
+        console.error('Error adding comment:', err);
         res.status(500).render('error404');
     }
 });
+
 
 router.delete('/:id/comment/:commentId', async (req, res) => {
     try {
         await db.Comment.findByIdAndDelete(req.params.commentId);
         res.redirect(`/places/${req.params.id}`);
     } catch (err) {
-        console.log('err', err);
+        console.error('Error deleting comment:', err);
         res.status(500).render('error404');
     }
 });
